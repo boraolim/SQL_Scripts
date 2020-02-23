@@ -1,6 +1,6 @@
 -- Ejemplo de un bulk insert.
 
-BULK INSERT table_name FROM 'C:\file.csv' WITH ( FIELDTERMINATOR = ',', ROWTERMINATOR = '\n' );
+BULK INSERT table_name FROM 'C:\file.csv' WITH ( FIELDTERMINATOR = ',', ROWTERMINATOR = '0x0a' );
 
 -- Query generador de columnas para compatibilidad de Amazon Redshift Lambdas.
 -- Autor: Olimpo Bonilla Ramírez.
