@@ -11,15 +11,15 @@ BULK INSERT table_name FROM 'C:\file.csv' WITH ( FIELDTERMINATOR = ',', ROWTERMI
 -- ===============================================
 -- 1. Ambiente de Microsoft SQL Server a Redshift.
 -- ===============================================
-USE [CronosII]
+USE [Api]
 GO
 
 -- 1. Declaro variables.
-DECLARE @NombreTabla varchar(255) = 'sosolicitudes';
-Declare @BaseDatos varchar(255) = 'CronosII';
+DECLARE @NombreTabla varchar(255) = 'mtMerchantsAMEX';
+Declare @BaseDatos varchar(255) = 'Api';
 DECLARE @mtObjetos TABLE ( id bigint not null, BaseDatos varchar(255), Esquema varchar(255), Tabla varchar(255), Columna varchar(255),
                            Tipo varchar(255), Tamanio int, ColumnaConversionSQLServer varchar(max), ColumnaConversionRedshift varchar(max),
-                           ColOrdinal int primary key not null);
+                           ColumnaCS varchar(max), ColOrdinal int primary key not null);
 DECLARE @mtTablaFinal TABLE (id bigint not null, Tabla varchar(255), QuerySQLFinal text, QueryFinalAWS text);
 
 -- 2. Inserto el query de la definición de la tabla.
@@ -49,6 +49,15 @@ SELECT So.Id,
             when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then lower(ltrim(rtrim(Sc.name))) + ' varchar(' + ltrim(rtrim(sc.length + 1)) + ') encode raw, '
             when (st.name = 'text' or st.name = 'ntext' ) then lower(ltrim(rtrim(Sc.name))) + ' varchar(256) encode raw, '
        else '' end                                      AS 'ColumnaRedshift',
+       case when (st.name = 'decimal') then 'public decimal ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'int') then 'public int ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'bigint') then 'public long ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'smallint') then 'public short ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'bit') then 'public bool ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'smalldatetime' or st.name = 'datetime' or st.name = 'date') then 'public DateTime ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then 'public string ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+            when (st.name = 'text' or st.name = 'ntext' ) then 'public string ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
+       else '' end                                      AS 'ColumnaRedshift',
        sc.colorder                                      AS 'ColOrdinal'
   FROM sysobjects SO
  INNER JOIN syscolumns SC ON (SO.ID = SC.ID)
@@ -61,7 +70,7 @@ SELECT So.Id,
                 from sys.tables t1
                INNER JOIN INFORMATION_SCHEMA.TABLES t2 ON (t1.name = t2.TABLE_NAME)
                WHERE (ltrim(rtrim(t1.name)) = @NombreTabla)
-            ) ist ON (ist.Tabla = SO.name) and (SO.id = ist.IdObjetoDB) and (ist.BaseDatos = 'CronosII')
+            ) ist ON (ist.Tabla = SO.name) and (SO.id = ist.IdObjetoDB) and (ist.BaseDatos = @BaseDatos)
  WHERE (SO.xtype = 'U')
    AND (SO.Name = @NombreTabla)
  ORDER BY SC.colorder asc;
@@ -74,4 +83,3 @@ SELECT * FROM @mtObjetos;
 -- Solo hay que poner el nombre de la tabla y en automatico, se trae la información de todos los campos en SQL Server.
 
 -- Fin del script.
-
