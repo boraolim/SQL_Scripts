@@ -19,7 +19,7 @@ DECLARE @NombreTabla varchar(255) = 'mtMerchantsAMEX';
 Declare @BaseDatos varchar(255) = 'Api';
 DECLARE @mtObjetos TABLE ( id bigint not null, BaseDatos varchar(255), Esquema varchar(255), Tabla varchar(255), Columna varchar(255),
                            Tipo varchar(255), Tamanio int, ColumnaConversionSQLServer varchar(max), ColumnaConversionRedshift varchar(max),
-                           ColumnaCS varchar(max), ColOrdinal int primary key not null);
+                                                     ColumnaCS varchar(max), ColumnaCS2 varchar(max), ExampleSetting varchar(max), ParameterName varchar(max), ADONETParams varchar(max), ColOrdinal int primary key not null);
 DECLARE @mtTablaFinal TABLE (id bigint not null, Tabla varchar(255), QuerySQLFinal text, QueryFinalAWS text);
 
 -- 2. Inserto el query de la definición de la tabla.
@@ -57,7 +57,37 @@ SELECT So.Id,
             when (st.name = 'smalldatetime' or st.name = 'datetime' or st.name = 'date') then 'public DateTime ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
             when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then 'public string ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
             when (st.name = 'text' or st.name = 'ntext' ) then 'public string ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }'
-       else '' end                                      AS 'ColumnaRedshift',
+       else '' end                                      AS 'ColumnaNETCS',
+       case when (st.name = 'decimal') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public decimal ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'int') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public int ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'bigint') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public long ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'smallint') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public short ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'bit') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public bool ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'smalldatetime' or st.name = 'datetime' or st.name = 'date') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public DateTime ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public string ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+            when (st.name = 'text' or st.name = 'ntext' ) then '[DataNames("' + lower(ltrim(rtrim(Sc.name))) + '", "' + lower(ltrim(rtrim(Sc.name))) + '")] ' + + CHAR(13)+CHAR(10) + ' public string ' + lower(ltrim(rtrim(Sc.name))) + ' { get; set; }' + CHAR(13)+CHAR(10)
+       else '' end                                      AS 'ColumnaNETCS2',
+       case when (st.name = 'decimal') then lower(ltrim(rtrim(Sc.name))) + ' = 0.00, '
+            when (st.name = 'int' OR st.name = 'bigint' OR st.name = 'smallint') then lower(ltrim(rtrim(Sc.name))) + ' = 0, '
+            when (st.name = 'bit') then lower(ltrim(rtrim(Sc.name))) + ' = false, '
+            when (st.name = 'smalldatetime' or st.name = 'datetime' or st.name = 'date') then lower(ltrim(rtrim(Sc.name))) + ' = new DateTime(2000, 1, 1), '
+            when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then lower(ltrim(rtrim(Sc.name))) + ' = "Hola", '
+            when (st.name = 'text' or st.name = 'ntext' ) then lower(ltrim(rtrim(Sc.name))) + ' = "Hola", '
+       else '' end                                      AS 'ExampleSet',
+       case when (st.name = 'decimal') then '@' + lower(ltrim(rtrim(Sc.name))) + ','
+            when (st.name = 'int' OR st.name = 'bigint' OR st.name = 'smallint') then '@' + lower(ltrim(rtrim(Sc.name))) + ','
+            when (st.name = 'bit') then '@' + lower(ltrim(rtrim(Sc.name))) + ','
+            when (st.name = 'smalldatetime' or st.name = 'datetime' or st.name = 'date') then '@' + lower(ltrim(rtrim(Sc.name))) + ','
+            when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then '@' + lower(ltrim(rtrim(Sc.name))) + ','
+            when (st.name = 'text' or st.name = 'ntext' ) then '@' + lower(ltrim(rtrim(Sc.name))) + ','
+       else '' end                                      AS 'ListParameter',
+       case when (st.name = 'decimal') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Decimal));'
+            when (st.name = 'int' OR st.name = 'bigint' OR st.name = 'smallint') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Int32));'
+            when (st.name = 'bit') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Boolean));'
+            when (st.name = 'smalldatetime' or st.name = 'datetime' or st.name = 'date') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Date));'
+            when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + '.ToUpper().Trim(), DbType.String));'
+            when (st.name = 'text' or st.name = 'ntext' ) then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + '.ToUpper().Trim(), DbType.String));'
+       else '' end                                      AS 'ADONETParameter',
        sc.colorder                                      AS 'ColOrdinal'
   FROM sysobjects SO
  INNER JOIN syscolumns SC ON (SO.ID = SC.ID)
