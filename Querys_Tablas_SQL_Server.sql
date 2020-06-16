@@ -19,7 +19,8 @@ DECLARE @NombreTabla varchar(255) = 'mtMerchantsAMEX';
 Declare @BaseDatos varchar(255) = 'Api';
 DECLARE @mtObjetos TABLE ( id bigint not null, BaseDatos varchar(255), Esquema varchar(255), Tabla varchar(255), Columna varchar(255),
                            Tipo varchar(255), Tamanio int, ColumnaConversionSQLServer varchar(max), ColumnaConversionRedshift varchar(max),
-                                                     ColumnaCS varchar(max), ColumnaCS2 varchar(max), ExampleSetting varchar(max), ParameterName varchar(max), ExampleUpdate varchar(max), SettingToModel varchar(MAX), ADONETParams varchar(max), ColOrdinal int primary key not null);
+                           ColumnaCS varchar(max), ColumnaCS2 varchar(max), ExampleSetting varchar(max), ParameterName varchar(max), ExampleUpdate varchar(max), SettingToModel varchar(MAX),
+                                                     SettingToModelJSInit varchar(MAX), SettingToModelJS varchar(MAX), ADONETParams varchar(max), ColOrdinal int primary key not null);
 DECLARE @mtTablaFinal TABLE (id bigint not null, Tabla varchar(255), QuerySQLFinal text, QueryFinalAWS text);
 
 -- 2. Inserto el query de la definición de la tabla.
@@ -83,6 +84,9 @@ SELECT So.Id,
        else '' end                                      AS 'ListParameter',
        lower(ltrim(rtrim(Sc.name))) + ' = @' + lower(ltrim(rtrim(Sc.name))) + ','       AS 'ExampleUPDATE',
        lower(ltrim(rtrim(Sc.name))) + ' = _Model.' + lower(ltrim(rtrim(Sc.name))) + ',' AS 'SettingToModel',
+       case when (st.name = 'nvarchar' or st.name = 'char' or st.name = 'varchar' or st.name = 'nchar') then 'vm.model.' + lower(ltrim(rtrim(Sc.name))) + ' = "";'
+       else 'vm.model.' + lower(ltrim(rtrim(Sc.name))) + ' = 0;' end AS 'SettingToModelJSInit',
+       'vm.model.' + lower(ltrim(rtrim(Sc.name))) + ' = _Model.' + lower(ltrim(rtrim(Sc.name))) + ';' AS 'SettingToModelJS',
        case when (st.name = 'decimal') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Decimal));'
             when (st.name = 'int' OR st.name = 'bigint' OR st.name = 'smallint') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Int32));'
             when (st.name = 'bit') then '_oParam.Add(oDb.CreateParameter("@' + lower(ltrim(rtrim(Sc.name))) + '", entity.' + lower(ltrim(rtrim(Sc.name))) + ', DbType.Boolean));'
